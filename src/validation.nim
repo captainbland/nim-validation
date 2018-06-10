@@ -1,6 +1,6 @@
 import json, macros
 import sequtils
-import sugar
+import future
 import typeinfo
 import strutils
 import options
