@@ -5,7 +5,7 @@ Nim validation is a simple to use validation library that performs validations a
 
 The aim of this library is to provide a simple, flexible mechanism for adding validations to your object fields - it does this without using RTTI and is type safe. It is easy to create custom validations, and currently has a small number of validations to demonstrate that it works. Nim Validation also works recursively.
 
-This library is still very young, so is quite likely to explode. Licensed under GPLv3. Currently it will only build under 0.18.1.
+This library is still very young, so is quite likely to explode. Licensed under GPLv3. Currently it will build under 0.18.0.
 
 ## Example
 There are some examples in the tests directory. Here's one for a quick viewing.
@@ -17,7 +17,6 @@ type TestObject = object
 
 
 # To generate the validation methods, you must call generateValidators on your type:
-
 generateValidators(TestObject) 
 
 # Then to validate the object you simply call validate() on it
@@ -28,7 +27,6 @@ doAssert(validation.errorCount == 1)
 doAssert(validation.hasErrors == true)
 
 # But you can also get a seq of the errors which you can use to extract messages to do with the errors
-
 for error in validation.validationErrors:
     echo error.message
 
