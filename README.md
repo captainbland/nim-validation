@@ -10,7 +10,7 @@ This library is still very young, so is quite likely to explode.
 # Example
 There are some examples in the tests directory. Here's one for a quick viewing.
 
-```
+```nim
 type TestObject = object
     something {.lessThan(50).}: int # Here we use a field pragma to assert that this field should be less than 50
     stringyfield {.matchesPattern("hello|bye").}: string
