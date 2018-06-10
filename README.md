@@ -5,7 +5,7 @@ Nim validation is a simple to use validation library that performs validations a
 
 The aim of this library is to provide a simple, flexible mechanism for adding validations to your object fields - it does this without using RTTI and is type safe. It is easy to create custom validations, and currently has a small number of validations to demonstrate that it works. Nim Validation also works recursively.
 
-This library is still very young, so is quite likely to explode. 
+This library is still very young, so is quite likely to explode. Licensed under GPLv3.
 
 ## Example
 There are some examples in the tests directory. Here's one for a quick viewing.
