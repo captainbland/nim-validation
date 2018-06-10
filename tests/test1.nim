@@ -32,6 +32,9 @@ let validationNested = WrapperObject(a: 6, b: "slkjdf", c: TestObject(something:
 doAssert(validationNested.errorCount == 3)
 doAssert(validationNested.hasErrors == true)
 
+for error in validationNested.validationErrors:
+    echo error.message
+
 template customValidation(oneOf: varargs[int]) {.pragma.}
 
 proc customValidation(field: int, oneOf: varargs[int]): Option[ValidationError] =
