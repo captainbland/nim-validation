@@ -1,3 +1,4 @@
 tests/nimcache
 test1
 src/nimcache
+htmldocs/*
