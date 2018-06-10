@@ -1,0 +1,32 @@
+{"compile":[
+["/home/jaron/nimble-meta/src/nimcache/nimble_meta_nimble_meta.c", "gcc -c  -w  -I'/home/jaron/.choosenim/toolchains/nim-#devel/lib' -o /home/jaron/nimble-meta/src/nimcache/nimble_meta_nimble_meta.o /home/jaron/nimble-meta/src/nimcache/nimble_meta_nimble_meta.c"]
+],
+"link":[
+"/home/jaron/nimble-meta/src/nimcache/nimble_meta_nimble_meta.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_system.o",
+"/home/jaron/nimble-meta/src/nimcache/nimble_meta_validators.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_json.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_macros.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_hashes.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_tables.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_strutils.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_lexbase.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_streams.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_unicode.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_parsejson.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_parseutils.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_math.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_bitops.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_algorithm.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_options.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_typetraits.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_sequtils.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_sugar.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_typeinfo.o",
+"/home/jaron/nimble-meta/src/nimcache/nimble_meta_validator_defs.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_re.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_pcre.o",
+"/home/jaron/nimble-meta/src/nimcache/stdlib_rtarrays.o"
+],
+"linkcmd": "gcc   -o /home/jaron/nimble-meta/src/nimble_meta  /home/jaron/nimble-meta/src/nimcache/nimble_meta_nimble_meta.o /home/jaron/nimble-meta/src/nimcache/stdlib_system.o /home/jaron/nimble-meta/src/nimcache/nimble_meta_validators.o /home/jaron/nimble-meta/src/nimcache/stdlib_json.o /home/jaron/nimble-meta/src/nimcache/stdlib_macros.o /home/jaron/nimble-meta/src/nimcache/stdlib_hashes.o /home/jaron/nimble-meta/src/nimcache/stdlib_tables.o /home/jaron/nimble-meta/src/nimcache/stdlib_strutils.o /home/jaron/nimble-meta/src/nimcache/stdlib_lexbase.o /home/jaron/nimble-meta/src/nimcache/stdlib_streams.o /home/jaron/nimble-meta/src/nimcache/stdlib_unicode.o /home/jaron/nimble-meta/src/nimcache/stdlib_parsejson.o /home/jaron/nimble-meta/src/nimcache/stdlib_parseutils.o /home/jaron/nimble-meta/src/nimcache/stdlib_math.o /home/jaron/nimble-meta/src/nimcache/stdlib_bitops.o /home/jaron/nimble-meta/src/nimcache/stdlib_algorithm.o /home/jaron/nimble-meta/src/nimcache/stdlib_options.o /home/jaron/nimble-meta/src/nimcache/stdlib_typetraits.o /home/jaron/nimble-meta/src/nimcache/stdlib_sequtils.o /home/jaron/nimble-meta/src/nimcache/stdlib_sugar.o /home/jaron/nimble-meta/src/nimcache/stdlib_typeinfo.o /home/jaron/nimble-meta/src/nimcache/nimble_meta_validator_defs.o /home/jaron/nimble-meta/src/nimcache/stdlib_re.o /home/jaron/nimble-meta/src/nimcache/stdlib_pcre.o /home/jaron/nimble-meta/src/nimcache/stdlib_rtarrays.o  -lm   -ldl"
+}
