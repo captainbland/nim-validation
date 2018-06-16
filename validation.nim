@@ -25,7 +25,7 @@ import options
 import validatordefs/validatordefs
 export validatordefs 
 
-const DEBUG = true
+const DEBUG = false
 
 type ErrorAccumulator* = object
     validationErrors*: seq[ValidationError]

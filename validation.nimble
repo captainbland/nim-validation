@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.1"
+version       = "0.2.0"
 author        = "captainbland"
 description   = "Field validation for Nim objects"
 license       = "GPLv3"
