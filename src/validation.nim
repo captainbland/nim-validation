@@ -22,7 +22,7 @@ import typeinfo
 import strutils
 import options
 
-import validator_defs
+import validator_defs/validator_defs
 export validator_defs 
 
 type ErrorAccumulator* = object
