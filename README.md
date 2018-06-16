@@ -8,7 +8,11 @@ The aim of this library is to provide a simple, flexible mechanism for adding va
 This library is still very young, so is quite likely to explode. Licensed under GPLv3. Currently it will build under 0.18.0.
 
 ## Examples
-There are some examples in the tests directory. Here's one for a quick viewing.
+
+### Basic example
+There are some examples in the tests directory. Here's one for a quick viewing. It shows a couple of the validators being used - lessThan which just determines if the field being validated is less than the value given, and matchesPattern which determines if the field matches a regex. 
+
+In the test given here, you can see there is a single validation error where 100 is not less than 50.
 
 ```nim
 type TestObject = object
@@ -32,7 +36,9 @@ for error in validation.validationErrors:
 
 ```
 
-Example validator - here's the less than validator included in this library:
+### Example validator
+
+This is the less than validator included in this library. There are many others in validatordefs/validatordefs.nim - validators always need to have a pragma defined to keep the compiler happy - it should take the number of arguments in the field pragma expression. Then the proc definition should always take the field as the first parameter, followed by the parameters passed in in the pragma expression. E.g. the fields x in the template and the proc map to eachother.
 
 ```nim
 
@@ -47,10 +53,10 @@ proc lessThan* [T](field: T, x: T): Option[ValidationError] =
 
 ```
 
-Cross field validation
+### Cross field validation
 
 With nim-validation, you can validate a field against any of the other fields in the object - even those which are nested within the object. 
-Using the `this` keyword to reference the current object, you can reference any of the fields on that object.
+Using the `this` keyword to reference the current object, you can reference any of the fields on that object. In the below example, we access the 'something' field of a child object. This could be, for instance, a reference to a parent object.
 
 There is an example in the tests for this, it is the below:
 
