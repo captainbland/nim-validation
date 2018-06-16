@@ -32,7 +32,7 @@ proc newErrorAccumulator*(): ErrorAccumulator =
     return ErrorAccumulator(validationErrors: @[])
 
 proc addError*(self: var ErrorAccumulator, error: Option[ValidationError]): void =
-    
+    echo "Calling add"
     if error.isSome():
         self.validationErrors.add(error.get())
 
@@ -42,6 +42,7 @@ proc errorCount*(accumulator: ErrorAccumulator): int = accumulator.validationErr
 
 proc `$`(accumulator: ErrorAccumulator): string =
     accumulator.validationErrors.map(e => e.message).join(",")
+
 
 type
     PragmaDef = object
@@ -71,6 +72,23 @@ proc `$`(typeInfo: TypeInfo): string =
 #Lookup index filter by NimNodeKind
 proc `[]`(x: NimNode, kind: NimNodeKind): seq[NimNode] {.compiletime.} =
     return toSeq(x.children).filter(c => c.kind == kind )
+
+proc safeGet(x: seq[NimNode], idx: int): Option[NimNode] {.compiletime.} =
+    if idx < x.len:
+        return some(x[idx])
+    else: return none(NimNode)
+
+proc `[]`(x: Option[NimNode], kind: NimNodeKind): seq[NimNode] {.compiletime.} =
+    if x == none(NimNode):
+        return @[]
+    else:
+        return x.get()[kind]
+
+proc getOr[T](opt: Option[T], alternative: T): T =
+    if opt == none(T):
+        return alternative
+    else:
+        return opt.get()
 
 proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
     
@@ -127,6 +145,35 @@ proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
     return TypeInfo(typename: name, fields: fields)
 
 
+
+macro isValidator*(pragmaCall: typed): untyped =
+    echo "isValidator: ", $pragmaCall.treeRepr
+    return ($pragmaCall.getTypeInst[nnkFormalParams].safeGet(0)[nnkBracketExpr].safeGet(0)[nnkSym].safeGet(1).getOr(newIdentNode("___!!")) == "ValidationError")
+
+template addCall(stmtList: typed, pragma: typed, field: typed):  stmt =
+    
+    let pragmaCall = $pragma.call
+
+
+    let identityCall = newCall(ident("isValidator")).add(ident(pragmaCall))
+    let validatorCall = newCall(ident($pragma.call))
+                       .add(newDotExpr(ident("t"), ident(field.name)))
+
+    for param in pragma.params:
+        validatorCall.add(param)
+    
+    let addToErrorsCall = newCall(newDotExpr(ident("errors"), ident("addError")))
+                         .add(validatorCall)
+    let boolConversion = newCall(ident("bool"), identityCall)
+    let whenStmt = newNimNode(nnkWhenStmt).add(newNimNode(nnkElifBranch).add(boolConversion, addToErrorsCall))
+        
+    stmtList.add(newCall(ident("echo")).add(newLit("validator call info:")))
+    stmtList.add(newCall(ident("echo")).add(boolConversion))
+    stmtList.add(newCall(ident("echo")).add(boolConversion))
+
+    stmtList.add(whenStmt)
+
+
 macro generateValidators*(t: typedesc): untyped = 
     let typeInfo = extract_type_info(t)
     echo typeInfo
@@ -138,16 +185,8 @@ macro generateValidators*(t: typedesc): untyped =
     stmtList.add(parseStmt("var errors = newErrorAccumulator()"))
     for field in typeInfo.fields:
         for pragma in field.pragmas:
-
-            let validatorCall = newCall(ident($pragma.call))
-                               .add(newDotExpr(ident("t"), ident(field.name)))
-            for param in pragma.params:
-                validatorCall.add(param)
-            
-            let addToErrorsCall = newCall(newDotExpr(ident("errors"), ident("addError")))
-                                 .add(validatorCall)
-
-            stmtList.add(addToErrorsCall)
+            let pragmaCallName = $pragma.call
+            addCall(stmtList, pragma, field)
 
     stmtList.add(parseStmt("errors"))
     
@@ -160,9 +199,7 @@ macro generateValidators*(t: typedesc): untyped =
             ident($typeIdent))
         ],
         body = stmtList
-    )
-    echo procDef.treeRepr
-          
+    )          
     
     result = newStmtList(procDef)
 

@@ -8,16 +8,27 @@ type ValidationError* = object
 proc someValidationError*(errorString: string): Option[ValidationError] =
     return some(ValidationError(message: errorString))
 
+template validation(condition: stmt, msg: string): stmt =
+    if not(condition):
+         return someValidationError(msg)
+    else: return none(ValidationError)
+
+type ValidationContext*[T] = object
+    field*: T
+
+proc newValidationContext*[T](field: T): ValidationContext[T] =
+    return ValidationContext[T](field: field)
+
+
 template greaterThan* (x: untyped) {.pragma.}
 
-proc greaterThan* [T](field: T, x: T): Option[ValidationError] = 
-    if not (field > x):
-        return someValidationError("Field was not greater than ".format($field, $x))
-    else: return none(ValidationError)
+proc greaterThan* [T](field, x: T): Option[ValidationError] = 
+    validation(ctx.field > x, "$1 was not less than $2".format($field, $x))
+
 
 template lessThan*(x: untyped) {.pragma.}
 
-proc lessThan* [T](field: T, x: T): Option[ValidationError] = 
+proc lessThan* [T](field:T, x: T): Option[ValidationError] = 
     if not (field < x):
         return someValidationError("$1 was not less than $2".format($field, $x))
     else: return none(ValidationError)
@@ -31,7 +42,7 @@ proc matchesPattern* (field: string, pattern: string): Option[ValidationError] =
 
 template notNil* {.pragma.}
 
-proc notNil* [T](field:T): Option[ValidationError] =
+proc notNil* [T](field: T): Option[ValidationError] =
     if(field.isNil):
         return someValidationError("Object is nil")
     else: return none(ValidationError)
@@ -39,7 +50,7 @@ proc notNil* [T](field:T): Option[ValidationError] =
 # For nested templates
 template valid* {.pragma.}
 
-proc valid* [T](field: T): Option[ValidationError] =
+proc valid* [T](field:T): Option[ValidationError] =
     let validation = field.validate()
     echo "Validating inner object, field: ", field, "v: ", validation.validationErrors
     if(validation.hasErrors):

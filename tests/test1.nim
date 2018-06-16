@@ -16,6 +16,8 @@ doAssert(positiveValidation.hasErrors == false)
 
 let negativeValidation = TestObject(something: 100, stringyfield: "invalid").validate()
 
+echo "negative validation ", negativeValidation
+
 doAssert(negativeValidation.errorCount == 2)
 doAssert(negativeValidation.hasErrors == true)
 
@@ -35,18 +37,24 @@ doAssert(validationNested.hasErrors == true)
 for error in validationNested.validationErrors:
     echo error.message
 
+template notAValidation(something: string) {.pragma.}
+
+proc notAValidation(something: string): void =
+    echo something
+
+
 template customValidation(oneOf: varargs[int]) {.pragma.}
 
-proc customValidation(field: int, oneOf: varargs[int]): Option[ValidationError] =
+proc customValidation(ctx: ValidationContext[int], oneOf: varargs[int]): Option[ValidationError] =
     for value in oneOf:
-        if value == field:
+        if value == ctx.field:
             return none(ValidationError)
     
     return someValidationError("Custom validation failure")
 
 type
     CustomObj = object
-        field {.customValidation(2, 4, 6).}: int
+        field {.customValidation(2, 4, 6), notAValidation("blah").}: int
 
 generateValidators(CustomObj)
 
