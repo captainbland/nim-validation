@@ -12,7 +12,10 @@ template validation(condition: untyped, msg: string): untyped =
     if not(condition):
          return someValidationError(msg)
     else: return none(ValidationError)
-    
+
+template toString[T](input: T): string =
+    if(isNil(input)): "NIL"
+    else: $input
 
 type ValidationContext*[T] = object
     field*: T
@@ -24,22 +27,31 @@ proc newValidationContext*[T](field: T): ValidationContext[T] =
 template greaterThan* (x: untyped) {.pragma.}
 
 proc greaterThan* [T](field, x: T): Option[ValidationError] = 
-    validation(ctx.field > x, "$1 was not less than $2".format($field, $x))
+    if not (field > x):
+        return someValidationError("$1 was not greater than $2".format(field.repr, x.repr))
+    else: return none(ValidationError)
 
 
 template lessThan*(x: untyped) {.pragma.}
 
 proc lessThan* [T](field:T, x: T): Option[ValidationError] = 
     if not (field < x):
-        return someValidationError("$1 was not less than $2".format($field, $x))
+        return someValidationError("$1 was not less than $2".format(field.repr, x.repr))
     else: return none(ValidationError)
 
-template matchesPattern* (pattern: string) {.pragma.}
+template matchesPattern* (pattern: untyped) {.pragma.}
 
 proc matchesPattern* (field: string, pattern: string): Option[ValidationError] = 
-    if not field.match(re(pattern)):
-        return someValidationError("$1 does not match pattern".format($field))
+    #assume it's optional by default, user should use notNil annotation otherwise
+    if pattern.isNil:
+        return none(ValidationError)
+    if not match(field, (re(pattern))):
+        return someValidationError("$1 does not match pattern".format(field.repr))
     else: return none(ValidationError)
+
+template equals*(x: untyped) {.pragma.}
+
+proc equals*[T](field: T, x:T): Option[ValidationError] = validation(field == x, "The fields are not equal")
 
 template notNil* {.pragma.}
 
@@ -52,9 +64,9 @@ proc notNil* [T](field: T): Option[ValidationError] =
 template valid* {.pragma.}
 
 proc valid* [T](field:T): Option[ValidationError] =
+    echo "calling nested validation thing"
     let validation = field.validate()
-    echo "Validating inner object, field: ", field, "v: ", validation.validationErrors
     if(validation.hasErrors):
         echo "inner object has errors"
-        return someValidationError("Nested object had validation errors $1".format($field))
+        return someValidationError("Nested object had validation errors $1".format(field.repr))
     else: return none(ValidationError)

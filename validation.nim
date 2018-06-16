@@ -88,7 +88,7 @@ proc extractTypeInfo(t: typedesc): TypeInfo {.compiletime.} =
         of nnkObjectTy: 
             x[nnkObjectTy][0][nnkRecList][0]
         else: 
-            when(DEBUG): echo "Invalid object. bugs incoming"
+            echo "Invalid object. bugs incoming"
             when(DEBUG): echo x[0].kind
             NimNode()
     
@@ -105,8 +105,13 @@ proc extractTypeInfo(t: typedesc): TypeInfo {.compiletime.} =
                 when(DEBUG): echo "name: ", fieldName, " t: ", t
             of nnkPragmaExpr: 
                 let t = node[nnkSym][0].symbol
-                let fieldName = $node[nnkPragmaExpr][0][nnkIdent][0]
-                
+                let fieldName = case(node[nnkPragmaExpr][0][0].kind):
+                    of nnkIdent: $node[nnkPragmaExpr][0][nnkIdent][0]
+                    of nnkPostfix: $node[nnkPragmaExpr][0][nnkPostfix][0][nnkIdent][1]
+                    else:
+                        echo "Couldn't figure out what name this ", node[nnkPragmaExpr][0].kind, "is. Bugs incoming!" 
+                        "ERROR"
+
                 var pragmas: seq[PragmaDef] = @[]
 
                 for call in node[nnkPragmaExpr][0][nnkPragma][0][nnkCall]:
@@ -135,15 +140,50 @@ template typeTest*(myCall: untyped): untyped =
 template  newEcho(msg: string): untyped =
     newCall(ident("echo")).add(newLit(msg))
 
+proc flattenDotExpr(dotExpr: NimNode): seq[NimNode] {.compileTime.} =
+
+    var finished = false
+    var currentExpr = dotExpr
+    var idents: seq[NimNode] = @[]
+    while not finished:
+        if currentExpr[0].kind == nnkDotExpr:
+            idents.add(currentExpr[1])
+            currentExpr = currentExpr[0]
+        else:
+            finished = true
+            idents.add(currentExpr[1])
+
+    return idents
+        
+proc constructDotExpr(idents: var seq[NimNode]): NimNode {.compileTime.} =
+    var dotExpr = newDotExpr(idents.pop(), idents.pop())
+
+    while idents.len > 0:
+        dotExpr = newDotExpr(dotExpr, idents.pop)
+    
+    return dotExpr
+
+
 template addCall(stmtList: typed, pragma: typed, field: typed): untyped =
     
     let pragmaCall = $pragma.call
 
     let validatorCall = newCall(ident($pragma.call))
                        .add(newDotExpr(ident("t"), ident(field.name)))
-
     for param in pragma.params: 
-        validatorCall.add(param)
+        when(DEBUG): echo "Param repr ", param.repr
+        when(DEBUG): echo param.treeRepr
+        if(param.kind == nnkDotExpr):
+            var idents = flattenDotExpr(param)
+            idents.add(ident("t"))
+            echo idents
+
+            let newDotExpr = constructDotExpr(idents)
+            when(DEBUG): echo newDotExpr.treeRepr
+
+            validatorCall.add(newDotExpr)
+        else: 
+            validatorCall.add(param)
 
     let addToErrorsCall = newCall(newDotExpr(ident("errors"), ident("addError")))
                          .add(validatorCall)
@@ -153,14 +193,12 @@ template addCall(stmtList: typed, pragma: typed, field: typed): untyped =
     let callCompiles = newCall(ident("compiles")).add(callTypeTest)
     let positiveBranch = newNimNode(nnkElifBranch).add(callCompiles).add(newStmtList(addToErrorsCall))
 
-    let negativeBranch = newNimNode(nnkElse).add(newStmtList(newEcho("Not adding a validation for: " & pragmaCall)));
+    let negativeBranch = newNimNode(nnkElse).add(newStmtList(newEcho("WARNING! Not adding a validation which would cause a compilation error: " & field.name & "." & pragmaCall)));
 
     let whenStmt = newNimNode(nnkWhenStmt).add(positiveBranch).add(negativeBranch)
 
 
     when(DEBUG): echo "When statement: ", whenStmt.treeRepr
-
-
     stmtList.add(whenStmt)
 
 

@@ -2,40 +2,55 @@ import validation
 import re
 import options
 
-type TestObject = object
-    something {.lessThan(50).}: int
-    stringyfield {.matchesPattern("hello|bye").}: string
+type TestObject* = object
+    something* {.lessThan(50).}: int
+    stringyfield {.notNil(), matchesPattern("hello|bye").}: string
+    greaterThanSomething {.greaterThan(this.something).}: int
+    shouldMatch {.matchesPattern(this.stringyfield).}: string
 
 
 generateValidators(TestObject)
 
-let positiveValidation = TestObject(something: 20, stringyfield: "hello").validate()
+let positiveValidation = TestObject(something: 20, stringyfield: "hello", greaterThanSomething: 25, shouldMatch:"hello").validate()
 
+
+echo "positive validation ", positiveValidation
 doAssert(positiveValidation.errorCount == 0)
 doAssert(positiveValidation.hasErrors == false)
+echo "postive validation passed"
 
-let negativeValidation = TestObject(something: 100, stringyfield: "invalid").validate()
+let negativeValidation = TestObject(something: 100, greaterThanSomething: 5, shouldMatch: "nope").validate()
 
 echo "negative validation ", negativeValidation
+doAssert(negativeValidation.errorCount == 4)
 
-doAssert(negativeValidation.errorCount == 2)
 doAssert(negativeValidation.hasErrors == true)
 
 type
     WrapperObject = ref object of RootObj
-        b {.matchesPattern("hello|bye").}: string
-        a {.lessThan(5).}: int 
-        c {.valid().}: TestObject
+        child* {.valid().}: TestObject
+        b* {.matchesPattern("hello|bye").}: string
+        a* {.lessThan(50), equals(this.child.something).}: int 
 
 generateValidators(WrapperObject)
 
-let validationNested = WrapperObject(a: 6, b: "slkjdf", c: TestObject(something: 70, stringyfield: "bye")).validate()
+let validationNestedNegative = WrapperObject(a: 75, b: "slkjdf", child: TestObject(something: 70, stringyfield: "bye", shouldMatch: "hu")).validate()
 
-doAssert(validationNested.errorCount == 3)
-doAssert(validationNested.hasErrors == true)
+echo "ValidatinNested: ", validationNestedNegative.errorCount, "msgs: ", validationNestedNegative
+doAssert(validationNestedNegative.errorCount == 4)
+doAssert(validationNestedNegative.hasErrors == true)
 
-for error in validationNested.validationErrors:
+
+for error in validationNestedNegative.validationErrors:
     echo error.message
+
+
+let validationNestedPositive = WrapperObject(a: 30, b: "hello", child: TestObject(something: 30, stringyfield: "bye", shouldMatch: "bye", greaterThanSomething:50)).validate()
+
+echo validationNestedPositive
+doAssert(validationNestedPositive.errorCount == 0)
+doAssert(validationNestedPositive.hasErrors == false)
+
 
 template notAValidation(something: string) {.pragma.}
 

@@ -11,4 +11,4 @@ srcDir        = "src"
 requires "nim >= 0.18.0"
 
 task docs, "Docs":
-  exec "nim doc2 --project -o ./src/validation.nim"
+  exec "nim doc2 --project -o ./validation.nim"
