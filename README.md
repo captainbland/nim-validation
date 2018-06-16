@@ -7,7 +7,7 @@ The aim of this library is to provide a simple, flexible mechanism for adding va
 
 This library is still very young, so is quite likely to explode. Licensed under GPLv3. Currently it will build under 0.18.0.
 
-## Example
+## Examples
 There are some examples in the tests directory. Here's one for a quick viewing.
 
 ```nim
@@ -46,3 +46,28 @@ proc lessThan* [T](field: T, x: T): Option[ValidationError] =
     else: return none(ValidationError)
 
 ```
+
+Cross field validation
+
+With nim-validation, you can validate a field against any of the other fields in the object - even those which are nested within the object. 
+Using the `this` keyword to reference the current object, you can reference any of the fields on that object.
+
+There is an example in the tests for this, it is the below:
+
+```nim
+type
+    WrapperObject = ref object of RootObj
+        child* {.valid().}: TestObject
+        b* {.matchesPattern("hello|bye").}: string
+        a* {.lessThan(50), equals(this.child.something).}: int 
+
+generateValidators(WrapperObject)
+
+let validationNestedNegative = WrapperObject(a: 75, b: "slkjdf", child: TestObject(something: 70, stringyfield: "bye", shouldMatch: "hu")).validate()
+
+echo "ValidatinNested: ", validationNestedNegative.errorCount, "msgs: ", validationNestedNegative
+doAssert(validationNestedNegative.errorCount == 4)
+doAssert(validationNestedNegative.hasErrors == true)
+
+```
+
