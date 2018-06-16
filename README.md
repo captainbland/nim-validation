@@ -3,9 +3,9 @@
 ## Description
 Nim validation is a simple to use validation library that performs validations against nim objects using their field pragmas. This approach is inspired by libraries like Hibernate validators and Rust's validation library.
 
-The aim of this library is to provide a simple, flexible mechanism for adding validations to your object fields - it does this without using RTTI and is type safe. It is easy to create custom validations, and currently has a small number of validations to demonstrate that it works. Nim Validation also works recursively.
+The aim of this library is to provide a simple, flexible mechanism for adding validations to your object fields - it does this without using RTTI and is type safe. It is easy to create custom validations, and currently has a small number of validations to demonstrate that it works. Nim Validation also works recursively with nested objects and supports cross field references in validations.
 
-This library is still very young, so is quite likely to explode. Licensed under GPLv3. Currently it will build under 0.18.0.
+This library is still quite young so breaking changes may come in and there could be bugs. Licensed under GPLv3. Currently it will build under Nim 0.18.0.
 
 ## Examples
 
@@ -56,7 +56,7 @@ proc lessThan* [T](field: T, x: T): Option[ValidationError] =
 ### Cross field validation
 
 With nim-validation, you can validate a field against any of the other fields in the object - even those which are nested within the object. 
-Using the `this` keyword to reference the current object, you can reference any of the fields on that object. In the below example, we access the 'something' field of a child object. This could be, for instance, a reference to a parent object.
+Using the `this` keyword to reference the current object, you can reference any of the fields on that object. In the below example, we access the 'something' field of a child object in the equals validation. This could be, for instance, a reference to a parent object.
 
 There is an example in the tests for this, it is the below:
 
