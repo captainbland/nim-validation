@@ -8,7 +8,7 @@ type ValidationError* = object
 proc someValidationError*(errorString: string): Option[ValidationError] =
     return some(ValidationError(message: errorString))
 
-template validation(condition: stmt, msg: string): stmt =
+template validation(condition: untyped, msg: string): untyped =
     if not(condition):
          return someValidationError(msg)
     else: return none(ValidationError)
