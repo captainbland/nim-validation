@@ -22,8 +22,8 @@ import typeinfo
 import strutils
 import options
 
-import validator_defs/validator_defs
-export validator_defs 
+import validatordefs/validatordefs
+export validatordefs 
 
 type ErrorAccumulator* = object
     validationErrors*: seq[ValidationError]
