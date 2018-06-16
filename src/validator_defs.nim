@@ -12,6 +12,7 @@ template validation(condition: stmt, msg: string): stmt =
     if not(condition):
          return someValidationError(msg)
     else: return none(ValidationError)
+    
 
 type ValidationContext*[T] = object
     field*: T

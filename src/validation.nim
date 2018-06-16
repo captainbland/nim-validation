@@ -145,31 +145,37 @@ proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
     return TypeInfo(typename: name, fields: fields)
 
 
+template typeTest*(myCall: untyped): untyped =
+    addError(errors, myCall)
 
-macro isValidator*(pragmaCall: typed): untyped =
-    echo "isValidator: ", $pragmaCall.treeRepr
-    return ($pragmaCall.getTypeInst[nnkFormalParams].safeGet(0)[nnkBracketExpr].safeGet(0)[nnkSym].safeGet(1).getOr(newIdentNode("___!!")) == "ValidationError")
+template newEcho(msg: string): expr =
+    newCall(ident("echo")).add(newLit(msg))
 
-template addCall(stmtList: typed, pragma: typed, field: typed):  stmt =
+template addCall(stmtList: typed, pragma: typed, field: typed): untyped =
     
     let pragmaCall = $pragma.call
 
-
-    let identityCall = newCall(ident("isValidator")).add(ident(pragmaCall))
     let validatorCall = newCall(ident($pragma.call))
                        .add(newDotExpr(ident("t"), ident(field.name)))
 
-    for param in pragma.params:
+    for param in pragma.params: 
         validatorCall.add(param)
-    
+
     let addToErrorsCall = newCall(newDotExpr(ident("errors"), ident("addError")))
                          .add(validatorCall)
-    let boolConversion = newCall(ident("bool"), identityCall)
-    let whenStmt = newNimNode(nnkWhenStmt).add(newNimNode(nnkElifBranch).add(boolConversion, addToErrorsCall))
-        
-    stmtList.add(newCall(ident("echo")).add(newLit("validator call info:")))
-    stmtList.add(newCall(ident("echo")).add(boolConversion))
-    stmtList.add(newCall(ident("echo")).add(boolConversion))
+
+
+    let callTypeTest = newCall(ident("typeTest")).add(validatorCall)
+    let callCompiles = newCall(ident("compiles")).add(callTypeTest)
+    let positiveBranch = newNimNode(nnkElifBranch).add(callCompiles).add(newStmtList(addToErrorsCall, newEcho("I'm in the thing!")))
+
+    let negativeBranch = newNimNode(nnkElse).add(newStmtList(newEcho("This is the negative branch")));
+
+    let whenStmt = newNimNode(nnkWhenStmt).add(positiveBranch).add(negativeBranch)
+
+
+    echo "When statement: ", whenStmt.treeRepr
+
 
     stmtList.add(whenStmt)
 
@@ -185,7 +191,6 @@ macro generateValidators*(t: typedesc): untyped =
     stmtList.add(parseStmt("var errors = newErrorAccumulator()"))
     for field in typeInfo.fields:
         for pragma in field.pragmas:
-            let pragmaCallName = $pragma.call
             addCall(stmtList, pragma, field)
 
     stmtList.add(parseStmt("errors"))
