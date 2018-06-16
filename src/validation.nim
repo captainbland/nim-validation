@@ -167,9 +167,9 @@ template addCall(stmtList: typed, pragma: typed, field: typed): untyped =
 
     let callTypeTest = newCall(ident("typeTest")).add(validatorCall)
     let callCompiles = newCall(ident("compiles")).add(callTypeTest)
-    let positiveBranch = newNimNode(nnkElifBranch).add(callCompiles).add(newStmtList(addToErrorsCall, newEcho("I'm in the thing!")))
+    let positiveBranch = newNimNode(nnkElifBranch).add(callCompiles).add(newStmtList(addToErrorsCall, newEcho("This is the positive branch")))
 
-    let negativeBranch = newNimNode(nnkElse).add(newStmtList(newEcho("This is the negative branch")));
+    let negativeBranch = newNimNode(nnkElse).add(newStmtList(newEcho("This is the negative branch: " & pragmaCall)));
 
     let whenStmt = newNimNode(nnkWhenStmt).add(positiveBranch).add(negativeBranch)
 

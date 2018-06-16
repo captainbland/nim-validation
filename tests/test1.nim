@@ -45,9 +45,9 @@ proc notAValidation(something: string): void =
 
 template customValidation(oneOf: varargs[int]) {.pragma.}
 
-proc customValidation(ctx: ValidationContext[int], oneOf: varargs[int]): Option[ValidationError] =
+proc customValidation(field: int, oneOf: varargs[int]): Option[ValidationError] =
     for value in oneOf:
-        if value == ctx.field:
+        if value == field:
             return none(ValidationError)
     
     return someValidationError("Custom validation failure")
