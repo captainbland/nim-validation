@@ -154,7 +154,7 @@ proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
 template typeTest*(myCall: untyped): untyped =
     addError(errors, myCall)
 
-template  newEcho(msg: string): expr =
+template  newEcho(msg: string): untyped =
     newCall(ident("echo")).add(newLit(msg))
 
 template addCall(stmtList: typed, pragma: typed, field: typed): untyped =
