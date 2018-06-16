@@ -38,7 +38,7 @@ type ErrorAccumulator* = object
 proc newErrorAccumulator*(): ErrorAccumulator =
     return ErrorAccumulator(validationErrors: @[])
 
-proc addError*(self: var ErrorAccumulator, error: Option[ValidationError]): void =
+template addError*(self: var ErrorAccumulator, error: Option[ValidationError]): void =
     whenDebug: echo "Calling add"
     if error.isSome():
         self.validationErrors.add(error.get())
