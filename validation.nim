@@ -79,24 +79,7 @@ proc `$`(typeInfo: TypeInfo): string =
 proc `[]`(x: NimNode, kind: NimNodeKind): seq[NimNode] {.compiletime.} =
     return toSeq(x.children).filter(c => c.kind == kind )
 
-proc safeGet(x: seq[NimNode], idx: int): Option[NimNode] {.compiletime.} =
-    if idx < x.len:
-        return some(x[idx])
-    else: return none(NimNode)
-
-proc `[]`(x: Option[NimNode], kind: NimNodeKind): seq[NimNode] {.compiletime.} =
-    if x == none(NimNode):
-        return @[]
-    else:
-        return x.get()[kind]
-
-proc getOr[T](opt: Option[T], alternative: T): T =
-    if opt == none(T):
-        return alternative
-    else:
-        return opt.get()
-
-proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
+proc extractTypeInfo(t: typedesc): TypeInfo {.compiletime.} =
     
     whenDebug: echo getTypeInst(t)[1].symbol.getImpl.treeRepr
     var x = getTypeInst(t)[1].symbol.getImpl
@@ -187,7 +170,7 @@ template addCall(stmtList: typed, pragma: typed, field: typed): untyped =
 
 
 macro generateValidators*(t: typedesc): untyped = 
-    let typeInfo = extract_type_info(t)
+    let typeInfo = extractTypeInfo(t)
     whenDebug: echo typeInfo
     
     let typeIdent = typeInfo.typeName.toNimIdent
