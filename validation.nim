@@ -25,6 +25,13 @@ import options
 import validatordefs/validatordefs
 export validatordefs 
 
+const DEBUG = false
+
+
+template whenDebug(something: untyped): untyped =
+    when(DEBUG):
+        something
+
 type ErrorAccumulator* = object
     validationErrors*: seq[ValidationError]
 
@@ -32,7 +39,7 @@ proc newErrorAccumulator*(): ErrorAccumulator =
     return ErrorAccumulator(validationErrors: @[])
 
 proc addError*(self: var ErrorAccumulator, error: Option[ValidationError]): void =
-    echo "Calling add"
+    whenDebug: echo "Calling add"
     if error.isSome():
         self.validationErrors.add(error.get())
 
@@ -42,7 +49,6 @@ proc errorCount*(accumulator: ErrorAccumulator): int = accumulator.validationErr
 
 proc `$`(accumulator: ErrorAccumulator): string =
     accumulator.validationErrors.map(e => e.message).join(",")
-
 
 type
     PragmaDef = object
@@ -60,13 +66,13 @@ type
         fields: seq[Field]
 
 proc `$`(typeInfo: TypeInfo): string =
-    echo "TypeInfo of ", typeInfo.typename, ": ("
+    whenDebug: echo "TypeInfo of ", typeInfo.typename, ": ("
     for field in typeInfo.fields:
-        echo "  ", [field.name, $field.t].join(", "), "; pragmas: ("
+        whenDebug: echo "  ", [field.name, $field.t].join(", "), "; pragmas: ("
         for pragma in field.pragmas:
-            echo "    ", $pragma.call, " params: ", pragma.params.len
-        echo "  )"
-    echo ")"
+            whenDebug: echo "    ", $pragma.call, " params: ", pragma.params.len
+        whenDebug: echo "  )"
+    whenDebug: echo ")"
 
 
 #Lookup index filter by NimNodeKind
@@ -92,11 +98,11 @@ proc getOr[T](opt: Option[T], alternative: T): T =
 
 proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
     
-    echo getTypeInst(t)[1].symbol.getImpl.treeRepr
+    whenDebug: echo getTypeInst(t)[1].symbol.getImpl.treeRepr
     var x = getTypeInst(t)[1].symbol.getImpl
-    echo "The name of the thing is ", $x[nnkSym][0]
+    whenDebug: echo "The name of the thing is ", $x[nnkSym][0]
 
-    echo x.treeRepr
+    whenDebug: echo x.treeRepr
     var recList: NimNode
     recList = case x[2].kind
         of nnkRefTy:
@@ -104,21 +110,21 @@ proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
         of nnkObjectTy: 
             x[nnkObjectTy][0][nnkRecList][0]
         else: 
-            echo "Invalid object. bugs incoming"
-            echo x[0].kind
+            whenDebug: echo "Invalid object. bugs incoming"
+            whenDebug: echo x[0].kind
             NimNode()
     
     var fields: seq[Field] = @[]
     let identDefs = recList[nnkIdentDefs]
     for node in identDefs:
-        echo "This node has ", toSeq(node.children).map(n => n.kind)
+        whenDebug: echo "This node has ", toSeq(node.children).map(n => n.kind)
         case node[0].kind:
             of nnkIdent: 
                 let fieldName = $node[nnkIdent][0]
 
                 let t = node[nnkSym][0].symbol
                 fields.add(Field(name:fieldName, t:t))
-                echo "name: ", fieldName, " t: ", t
+                whenDebug: echo "name: ", fieldName, " t: ", t
             of nnkPragmaExpr: 
                 let t = node[nnkSym][0].symbol
                 let fieldName = $node[nnkPragmaExpr][0][nnkIdent][0]
@@ -126,7 +132,7 @@ proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
                 var pragmas: seq[PragmaDef] = @[]
 
                 for call in node[nnkPragmaExpr][0][nnkPragma][0][nnkCall]:
-                    echo "CALL[0]: ", call[0]
+                    whenDebug: echo "CALL[0]: ", call[0]
                     let pragmaCallName = symbol(call[0])
 
                     var pragmaParams: seq[NimNode] = @[]
@@ -138,7 +144,7 @@ proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
                 fields.add(Field(name:fieldName, t:t, pragmas: pragmas))
 
             else: 
-                echo node.kind
+                whenDebug: echo node.kind
                 discard
     
     let name = $x[nnkSym][0]
@@ -148,7 +154,7 @@ proc extract_type_info(t: typedesc): TypeInfo {.compiletime.} =
 template typeTest*(myCall: untyped): untyped =
     addError(errors, myCall)
 
-template newEcho(msg: string): expr =
+template  newEcho(msg: string): expr =
     newCall(ident("echo")).add(newLit(msg))
 
 template addCall(stmtList: typed, pragma: typed, field: typed): untyped =
@@ -167,14 +173,14 @@ template addCall(stmtList: typed, pragma: typed, field: typed): untyped =
 
     let callTypeTest = newCall(ident("typeTest")).add(validatorCall)
     let callCompiles = newCall(ident("compiles")).add(callTypeTest)
-    let positiveBranch = newNimNode(nnkElifBranch).add(callCompiles).add(newStmtList(addToErrorsCall, newEcho("This is the positive branch")))
+    let positiveBranch = newNimNode(nnkElifBranch).add(callCompiles).add(newStmtList(addToErrorsCall))
 
-    let negativeBranch = newNimNode(nnkElse).add(newStmtList(newEcho("This is the negative branch: " & pragmaCall)));
+    let negativeBranch = newNimNode(nnkElse).add(newStmtList(newEcho("Not adding a validation for: " & pragmaCall)));
 
     let whenStmt = newNimNode(nnkWhenStmt).add(positiveBranch).add(negativeBranch)
 
 
-    echo "When statement: ", whenStmt.treeRepr
+    whenDebug: echo "When statement: ", whenStmt.treeRepr
 
 
     stmtList.add(whenStmt)
@@ -182,7 +188,7 @@ template addCall(stmtList: typed, pragma: typed, field: typed): untyped =
 
 macro generateValidators*(t: typedesc): untyped = 
     let typeInfo = extract_type_info(t)
-    echo typeInfo
+    whenDebug: echo typeInfo
     
     let typeIdent = typeInfo.typeName.toNimIdent
 
