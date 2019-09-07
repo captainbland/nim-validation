@@ -4,7 +4,7 @@ import options
 
 type TestObject* = object
     something* {.lessThan(50).}: int
-    stringyfield {.notNil(), matchesPattern("hello|bye").}: string
+    stringyfield {.matchesPattern("hello|bye").}: string
     greaterThanSomething {.greaterThan(this.something).}: int
     shouldMatch {.matchesPattern(this.stringyfield).}: string
 
@@ -22,7 +22,7 @@ echo "postive validation passed"
 let negativeValidation = TestObject(something: 100, greaterThanSomething: 5, shouldMatch: "nope").validate()
 
 echo "negative validation ", negativeValidation
-doAssert(negativeValidation.errorCount == 4)
+doAssert(negativeValidation.errorCount == 3)
 
 doAssert(negativeValidation.hasErrors == true)
 
@@ -58,7 +58,7 @@ proc notAValidation(something: string): void =
     echo something
 
 
-template customValidation(oneOf: varargs[int]) {.pragma.}
+template customValidation(oneOf: openArray[int]) {.pragma.}
 
 proc customValidation(field: int, oneOf: varargs[int]): Option[ValidationError] =
     for value in oneOf:
@@ -69,9 +69,11 @@ proc customValidation(field: int, oneOf: varargs[int]): Option[ValidationError] 
 
 type
     CustomObj = object
-        field {.customValidation(2, 4, 6), notAValidation("blah").}: int
+        field {.customValidation(@[2, 4, 6]), notAValidation("blah").}: int
 
 generateValidators(CustomObj)
+
+echo "CUSTOM VALIDATION RESPONSE: ", customValidation(5, @[1,2,3])
 
 
 let customValidationPositive = CustomObj(field: 2).validate()

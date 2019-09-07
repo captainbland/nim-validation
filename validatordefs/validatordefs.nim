@@ -14,7 +14,7 @@ template validation(condition: untyped, msg: string): untyped =
     else: return none(ValidationError)
 
 template toString[T](input: T): string =
-    if(isNil(input)): "NIL"
+    if(input is nil): "NIL"
     else: $input
 
 type ValidationContext*[T] = object
@@ -43,8 +43,8 @@ template matchesPattern* (pattern: untyped) {.pragma.}
 
 proc matchesPattern* (field: string, pattern: string): Option[ValidationError] = 
     #assume it's optional by default, user should use notNil annotation otherwise
-    if pattern.isNil:
-        return none(ValidationError)
+    # if pattern == nil:
+    #     return none(ValidationError)
     if not match(field, (re(pattern))):
         return someValidationError("$1 does not match pattern".format(field.repr))
     else: return none(ValidationError)
@@ -56,7 +56,7 @@ proc equals*[T](field: T, x:T): Option[ValidationError] = validation(field == x,
 template notNil* {.pragma.}
 
 proc notNil* [T](field: T): Option[ValidationError] =
-    if(field.isNil):
+    if(field == nil):
         return someValidationError("Object is nil")
     else: return none(ValidationError)
 

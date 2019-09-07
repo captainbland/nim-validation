@@ -17,7 +17,7 @@
 
 import json, macros
 import sequtils
-import future
+import sugar
 import typeinfo
 import strutils
 import options
@@ -74,7 +74,7 @@ proc `$`(typeInfo: TypeInfo): string =
 proc `[]`(x: NimNode, kind: NimNodeKind): seq[NimNode] {.compiletime.} =
     return toSeq(x.children).filter(c => c.kind == kind )
 
-proc extractTypeInfo(t: typedesc): TypeInfo {.compiletime.} =
+proc extractTypeInfo(t: NimNode): TypeInfo {.compiletime.} =
     
     when(DEBUG): echo getTypeInst(t)[1].symbol.getImpl.treeRepr
     var x = getTypeInst(t)[1].symbol.getImpl
